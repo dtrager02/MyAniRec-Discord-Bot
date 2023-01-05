@@ -3,3 +3,4 @@ token.txt
 url.txt
 *.sql
 __pycache__/
+dump.rdb

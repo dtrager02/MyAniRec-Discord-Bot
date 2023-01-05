@@ -55,8 +55,10 @@ async def faq(ctx):
     msg1 = """**Q:** How does it work?
 **A:** Short Answer: A machine learning model developed by Netflix called MultVAE, a data management system called Redis, and a discord botwritten in Python. As far as I know, it is the first anime recommender system of this scale.
 Long Answer, the model driving the system uses a Variational Autoencoder to learn the latent features of each item. It does so basically by feeding in over 50 million anime lists, calculating how closely the model predicted the items you watched, and updating themodel to optimize its predictions. When you use the bot, every anime you input is fed into the model, and the model outputs a ranking forevery other anime you haven't seen. The ranking is based on how likely that anime is to be in your list, and that is one of the limitationsof this kind of model - it cannot take into account changing preferences over time. It also struggles when a list contains very unpopularitems, or items that do not make sense to be together (e.g. seeing season 3 and 4 of a show, but not season 1). The model is still indevelopment, and I am constantly working on improving it.\n
-**Q:** Where are the new anime???
-**A:** This bot aims to have recommendations for all shows up to the previous completed season. Basically, the model behind thisrecommender system is enormous, and I cannot afford to update it every day as new shows and new ratings come out, nor would that beeffective given how ratings change drastically throughout the season.\n
+**Q:** What anime should I add? The model works best if you add animes that you watched and had a positive experience with. Adding shows that you watched but meant nothing to you or shows you disliked will only hurt the performance of the current model. Also, adding strange combinations of shows, such as only season 4's with no season 1's sometimes lead to unpredictable results.
+**A:**\n
+**Q:** Where are the new anime?
+**A:** This bot aims to have recommendations for all shows **up to the previous completed season.** Basically, the model behind this recommender system is enormous, and I cannot afford to update it every day as new shows and new ratings come out, nor would that beeffective given how ratings change drastically throughout the season.\n
 **Q:** I found a bug, what do I do?
 **A:** Message NoSkillOrHacks#9465 on discord, and we can work through it together. Otherwise, just use the `.feedback` command to let me know.\n\n"""
     msg2 = """**Q:** Why am I getting terrible Recommendations?
@@ -70,7 +72,7 @@ async def info(ctx,*args):
     await ctx.send("""MyAniRec is a discord bot that will help you find anime recommendations based on your preferences. It runs an ML model trained on over 50 million users from myanimelist.net.
 **Step 1 (Suggested):**\nUse the `.mal set <username>` command to set your MAL account username.
 This will load all of your completed anime into the system and is much easier than typing them in one by one.
-**Step 2 (Optional):**\nUse the `.rec add <anime_title>` command to add more anime to the list in case you don't have a MAL account or it is outdated.
+**Step 2 (Optional):**\nUse the `.rec add <anime_title>` command to add more anime to the list in case you don't have a MAL account or it is outdated. `<anime_title>` can be just part of the title, and the spelling doesn't have to be perfect either.
 The more anime you add, the better the recommendations will be. See `.tips` for how to remove anime from the list.
 **Step 3:**\nUse the `.rec complete` command to get recommendations.
 **Step 4 (Optional):**\nUse the `.choose <number>` command to indicate which recommendation appealed to you the most.
@@ -85,11 +87,11 @@ async def tips(ctx):
 Most other commands will have virtually  no limit, so spam away.
 For some other commands that involve multiple inputs, the bot will stop waiting for inputs after **6 minutes**. Youalways restart the command if you need to. 
 **Saving:** The bot will remember all your input, so no need to repeat old commands unless you want to change something. 
-**Commands:** <> indicates a required input, [] indicates an optional input*. You do not need to literally input tsymbols. All unrequired input will be ignored.
+**Commands:** <> indicates a required input, [] indicates an optional input*. You do not need to literally input symbols. All unrequired input will be ignored.
 `.mal set <username>`: Set your MAL username. This will load all of your completed anime into the system and is much eathan typing them in one by one.
-`.mal remove <username>`: Delete all your MAL data. If you use this, the anime you manually entered with the .rec commwill still be there, so it is useful if you like manual tuning without MAL.
-`.rec add <anime_title>`: Add an anime to your list. Follow the directions in the bot's response.
-`.rec remove <anime_title>`: Remove an anime from your list. Follow the directions in the bot's response. Due to the waybot works, there is no way to remove an anime from a linked MAL account. If you don't like certain ratings in your MAL,`.mal remove` and manually add them back with `.rec add`, or simply update your MAL account.
+`.mal remove`: Delete all your MAL data. If you use this, the anime you manually entered with the .rec command will still be there, so it is useful if you like manual tuning without MAL.
+`.rec add <anime_title>`: Add an anime to your list. Follow the directions in the bot's response. You will be able to add multiple at once by inputting the numbers separated by spaces.
+`.rec remove <anime_title>`: Remove an anime from your list. Follow the directions in the bot's response. Due to the way the bot works, there is no way to remove an anime from a linked MAL account. If you don't like certain ratings in your MAL, do `.mal remove` and manually add them back with `.rec add`, or simply update your MAL account.
 `.rec complete`: Get recommendations. Follow the directions in the bot's response to see more pages of recommendations.
 `.list`: Lists all the data the bot has on you. This is useful for making sure you are ready before `.rec complete`.
 """)
@@ -182,8 +184,10 @@ async def add(ctx,*args):
     a = await fetch(session,title)
     b = await formatlist(a)
     ##########################
-    description = """Please send the number for the anime you are looking for. If none match, \
-        send anything else and try `.rec add` again with more precise spelling."""
+    description = """Please send the number(s) for the anime(s) you are looking for. If none match, \
+        send anything else and try `.rec add` again with more precise input.\n **Examples:**\
+        `1 2 3` will add the first 3 animes to your list\n\
+        `3` will add thethird anime to your list"""
     embed = discord.Embed(title="Anime Search (Add)",description=description)
     embed.insert_field_at(0,name="Options",value=b,inline=False)
     embed.set_footer(text="If you changed your mind, please use the .rec remove command to remove it.")
@@ -191,9 +195,9 @@ async def add(ctx,*args):
     ##########################
     msg = await bot.wait_for('message',check=lambda message: message.author == ctx.author,timeout=360.0)
     try:
-        choice = int(msg.content)
-        db.sadd(f"{ctx.author.id}:added_anime_ids",a[choice-1][1])  
-        await ctx.send(f"Added {a[choice-1][0]} to your list!")
+        choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
+        db.sadd(f"{ctx.author.id}:added_anime_ids",*choices)  
+        await ctx.send(f"Added {','.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])} to your list!")
     except Exception as e:
         # print(e.with_traceback())
         ...
