@@ -1,1 +1,5 @@
-*.txt
+token.txt
+*.log
+url.txt
+*.sql
+__pycache__/
