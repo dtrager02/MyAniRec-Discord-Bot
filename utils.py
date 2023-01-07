@@ -31,8 +31,8 @@ async def get_ranking(data,converter,seen_items):
     seen = converter.loc[converter.index.isin(seen_items),"train_id"].values
     data[0,seen] = -torch.inf
     out_sorted = torch.argsort(data,dim=1,descending=True)
-    out_sorted_converted = out_sorted.apply_(lambda x: converter[converter['train_id'] == x].index.values[0])
-    return out_sorted_converted[0,0:400].tolist()
+    out_sorted_converted = converter.reset_index().set_index("train_id").loc[out_sorted[0,:400].tolist(),"item_id"].values
+    return out_sorted_converted
 
 async def main(session):
     a = await fetch(session,"haj")

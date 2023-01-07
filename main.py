@@ -19,7 +19,7 @@ db = redis.Redis(host='127.0.0.1', port=6379, db=0,decode_responses=True)
 item_map = pd.read_csv("item_map.csv").set_index("item_id")
 model = torch.load("models/multvae.pt",map_location=torch.device('cpu'))
 model.eval()
-bot = commands.Bot(command_prefix=".",intents=intents)
+bot = commands.Bot(command_prefix="/",intents=intents)
 """
 db format:
 key: user
@@ -296,5 +296,5 @@ async def myids(ctx,*args):
 #     await sqldb.close()
 TOKEN = open('token.txt',"r").read()
 print(TOKEN)
-# handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-bot.run(TOKEN) #, log_handler=handler, log_level=logging.INFO
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+bot.run(TOKEN, log_handler=handler, log_level=logging.INFO)
