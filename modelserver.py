@@ -38,7 +38,7 @@ class Model:
         output,_,_ = self.model(torch.from_numpy(input))
         ranks =self.preprocessor.get_ranking(output,ids)
         #print(pc()-start,"time taken total",flush=True)
-        return ranks
+        return {"ranks":ranks}
     # async def calldirect(self, ids):
     #     input = self.preprocessor.generate_user_tensor(ids)
     #     #print(input.shape,"abcd",flush=True)

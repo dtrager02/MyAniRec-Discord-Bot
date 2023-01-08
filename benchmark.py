@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import ray
+import json
 from time import perf_counter as pc
 async def fetch(session, url,sleep):
     # await asyncio.sleep(sleep)
@@ -14,10 +15,11 @@ async def fetchhandle(session, handle,sleep):
 async def main(handle):
     async with aiohttp.ClientSession(trust_env = True) as session:
         # tasks = [fetchhandle(session, handle,i/1000.0) for i in range(10000)]
-        tasks = [fetch(session, "http://127.0.0.1:8000",i/1500.0) for i in range(10000)]
+        tasks = [fetch(session, "http://127.0.0.1:8000",i/10.0) for i in range(10)]
         resps = await asyncio.gather(*tasks)
-        # jsons_ = [resp.text() for resp in resps]
-        # jsons = await asyncio.gather(*jsons_)
+        jsons_ = [resp.json() for resp in resps]
+        jsons = await asyncio.gather(*jsons_)
+        print(jsons[0],type(jsons[0]))
         await session.close()
 policy = asyncio.WindowsSelectorEventLoopPolicy()
 asyncio.set_event_loop_policy(policy)

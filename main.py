@@ -96,6 +96,7 @@ For some other commands that involve multiple inputs, the bot will stop waiting 
 `.rec add <anime_title>`: Add an anime to your list. Follow the directions in the bot's response. You will be able to add multiple at once by inputting the numbers separated by spaces.
 `.rec remove <anime_title>`: Remove an anime from your list. Follow the directions in the bot's response. Due to the way the bot works, there is no way to remove an anime from a linked MAL account. If you don't like certain ratings in your MAL, do `.mal remove` and manually add them back with `.rec add`, or simply update your MAL account.
 `.rec complete`: Get recommendations. Follow the directions in the bot's response to see more pages of recommendations.
+`.rec clear`: Remove all your added anime. Does not remove MAL-related data.
 `.list`: Lists all the data the bot has on you. This is useful for making sure you are ready before `.rec complete`.
 """)
     await ctx.send("""`.tips`: Shows this message.
@@ -147,9 +148,13 @@ async def set(ctx,*args):
     a = await fetch_user(session,username)
     if a['status'] != 200:
         await ctx.send("Error retrieving data. Please check your username and try again.")
+        session.close()
+        return
     b = get_liked_anime(a)
     if len(b) == 0:
         await ctx.send("This user has no completed anime. Please add some manually with `.rec add <anime_title>`.")
+        session.close()
+        return
     with db.pipeline() as pipe:
         pipe.delete(f"{ctx.author.id}:mal_anime_ids")
         pipe.set(f"{ctx.author.id}:mal",username)
@@ -178,6 +183,14 @@ async def list(ctx):
     await ctx.send(content)    
 
 @rec.command()
+async def clear(ctx):
+    with db.pipeline() as pipe:
+        pipe.delete(f"{ctx.author.id}:added_anime_ids")
+        pipe.delete(f"{ctx.author.id}:added_anime_titles")
+        pipe.execute()
+    await ctx.send("Done!")
+
+@rec.command()
 async def add(ctx,*args):
     title = " ".join(args)
     if len(title) == 0:
@@ -200,7 +213,7 @@ async def add(ctx,*args):
     try:
         choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
         db.sadd(f"{ctx.author.id}:added_anime_ids",*choices)  
-        await ctx.send(f"Added {','.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])} to your list!")
+        await ctx.send(f"Added {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])}to your list!")
     except Exception as e:
         # print(e.with_traceback())
         ...
@@ -209,10 +222,10 @@ async def add(ctx,*args):
 def process_recs(recs,start=1):
     titles = item_map.loc[recs,"anime_title"].values
     recs = [f'[{titles[i]}](https://myanimelist.net/anime/{recs[i]})' for i in range(len(titles))]
-    description = formatlist2(recs)
+    description = formatlist2(recs,start)
     print(description)
     embed = discord.Embed(title="Your Recommendations:",description=description)
-    embed.set_footer(text="React using the arrows to browse more recommendations.")
+    embed.set_footer(text="React (Double Click) using the arrows to browse more recommendations.")
     return embed
     
 
@@ -220,11 +233,17 @@ def process_recs(recs,start=1):
 @check_cooldown
 async def complete(ctx):
     ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1)) #WHY IS THIS RETURNING STRINGS
-    a = await generate_user_tensor(ids,item_map=item_map)
-    output,_,_ = model(a)
-    # print("hi")
-    ranks = await get_ranking(output,item_map,ids)
-    # print(ranks[:10])
+    # Old ML logic
+    # a = await generate_user_tensor(ids,item_map=item_map)
+    # output,_,_ = model(a)
+    # ranks = await get_ranking(output,item_map,ids)
+    
+    #New ML logic
+    session = aiohttp.ClientSession()
+    ranks = await session.post("http://127.0.0.1:8000", json={"array": ids})
+    ranks = await ranks.json()
+    ranks = ranks['ranks']
+    session.close()
     with db.pipeline() as pipe:
         pipe.delete(f"{ctx.author.id}:recs")
         pipe.rpush(f"{ctx.author.id}:recs",*(ranks))
@@ -280,9 +299,9 @@ async def remove(ctx,*args):
     ##########################
     msg = await bot.wait_for('message',check=lambda message: message.author == ctx.author,timeout=360.0)
     try:
-        choice = int(msg.content)
-        db.srem(f"{ctx.author.id}:added_anime_ids",a[choice-1][1])  
-        await ctx.send(f"Removed {a[choice-1][0]} from your list!")
+        choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
+        db.srem(f"{ctx.author.id}:added_anime_ids",*choices)  
+        await ctx.send(f"Removed {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])}from your list!")
     except Exception as e:
         # print(e.with_traceback())
         ...
@@ -295,8 +314,8 @@ async def myids(ctx,*args):
 
 @bot.command()
 async def feedback(ctx,*args): 
-    if len(args >1):
-        await ctx.send("Please enter your feedback surrounded by quotes, like so: `.feedback \"Stop giving me exactly what I want!\"`")   
+    if len(args) > 1:
+        await ctx.send("Please enter your feedback surrounded by quotes, like so: `.feedback \"Stop being so good!\"`")   
     text = args[0]
     with open("feedback.txt","a") as f:
         f.write(f"{ctx.author.id},{ctx.author.name},{ctx.guild},{str(datetime.now())},{text}")
@@ -304,18 +323,19 @@ async def feedback(ctx,*args):
     
 @bot.command()
 async def choice(ctx,*args): 
-    if len(args >1):
+    if len(args) > 1:
         await ctx.send("Please enter your feedback surrounded by quotes, like so: `.feedback \"Stop giving me exactly what I want!\"`")   
     c = int(args[0])
-    offset = db.get(f"{ctx.author.id}:rec_offset")
+    offset = int(db.get(f"{ctx.author.id}:rec_offset"))
     anime_id = db.lindex(f"{ctx.author.id}:recs",offset+c-1)
     with open("choices.txt","a") as f:
-        f.write(f"{ctx.author.id},{ctx.author.name},{ctx.guild},{str(datetime.now())},{offset-1},{anime_id}")
-    await ctx.send("Thank you for your feedback! The bot team might reach out to you if we have any questions.")
+        f.write(f"{ctx.author.id},{ctx.author.name},{ctx.guild},{str(datetime.now())},{offset-1},{anime_id},recs:{db.lrange(f'{ctx.author.id}:recs',0,-1)}")
+    await ctx.send("Thank you for your input!")
 # @bot.command()
 # async def close(ctx):    
 #     global sqldb
 #     await sqldb.close()
+
 TOKEN = open('token.txt',"r").read()
 print(TOKEN)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
