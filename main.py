@@ -2,6 +2,7 @@ import discord
 import aiosqlite
 from discord.ext import commands
 import aiohttp
+from datetime import datetime
 from utils import *
 import logging
 from load_mal_user import *
@@ -53,16 +54,18 @@ async def mal(ctx):
 @bot.command()
 async def faq(ctx):
     msg1 = """**Q:** How does it work?
-**A:** Short Answer: A machine learning model developed by Netflix called MultVAE, a data management system called Redis, and a discord botwritten in Python. As far as I know, it is the first anime recommender system of this scale.
-Long Answer, the model driving the system uses a Variational Autoencoder to learn the latent features of each item. It does so basically by feeding in over 50 million anime lists, calculating how closely the model predicted the items you watched, and updating themodel to optimize its predictions. When you use the bot, every anime you input is fed into the model, and the model outputs a ranking forevery other anime you haven't seen. The ranking is based on how likely that anime is to be in your list, and that is one of the limitationsof this kind of model - it cannot take into account changing preferences over time. It also struggles when a list contains very unpopularitems, or items that do not make sense to be together (e.g. seeing season 3 and 4 of a show, but not season 1). The model is still indevelopment, and I am constantly working on improving it.\n
-**Q:** What anime should I add? The model works best if you add animes that you watched and had a positive experience with. Adding shows that you watched but meant nothing to you or shows you disliked will only hurt the performance of the current model. Also, adding strange combinations of shows, such as only season 4's with no season 1's sometimes lead to unpredictable results.
-**A:**\n
+**A:** Short Answer: A machine learning model developed by Netflix called MultVAE, a data management system called Redis, and a discord bot written in Python, and a distributed ML server running using Ray Serve. As far as I know, it is the first anime recommender system of this scale.
+Long Answer, the model driving the system uses a Variational Autoencoder to learn the latent features of each item. It does so basically by feeding in over 50 million anime lists, calculating how closely the model predicted the items you watched, and updating the model to optimize its predictions. When you use the bot, every anime you input is fed into the model, and the model outputs a ranking for every other anime you haven't seen. The model is still in development, and I am constantly working on improving it. One strength of it is how efficient it is, and how it is user-agnostic, meaning it does not require any user-specific data to make a prediction. This allows it to instantly make a prediction for new users without any kind of clustering. Another unique strength of MultVae is how resistant it is to overfitting. It performs well even with heavy dropout, and uses KL divergence in the loss to regularize the distribution of the model latent representation. The model architecture itself is pretty complex, so it was copied from the original authors, but the training loop, data processing, and data loader are all custom and heavily optimized, to the point that a model can be trained in about 15 minutes on Google Colab Pro.\n
+**Q:** What anime should I add?
+**A:**Add shows you **enjoyed**. Adding shows that you watched but meant nothing to you or shows you disliked will only hurt the performance of the current model. Also, very rarely, adding strange combinations of shows, such as only season 4's with no season 1's sometimes lead to unpredictable results.\n
 **Q:** Where are the new anime?
-**A:** This bot aims to have recommendations for all shows **up to the previous completed season.** Basically, the model behind this recommender system is enormous, and I cannot afford to update it every day as new shows and new ratings come out, nor would that beeffective given how ratings change drastically throughout the season.\n
+**A:** This bot aims to have recommendations for all shows **up to the previous completed season.** Basically, the model behind this recommender system is enormous, and I cannot afford to update it every day as new shows and new ratings come out, nor would that be effective given how ratings change drastically throughout the season.\n
 **Q:** I found a bug, what do I do?
 **A:** Message NoSkillOrHacks#9465 on discord, and we can work through it together. Otherwise, just use the `.feedback` command to let me know.\n\n"""
     msg2 = """**Q:** Why am I getting terrible Recommendations?
-**A:** (Copium warning) There are many weaknesses of this kind of Recommender System. It struggles when a list contains very unpopular items, oritems that do not make sense to be together (e.g. seeing season 3 and 4 of a show, but not season 1). If you take the time to tune yourlist with the bot commands, it will definetely give better output. However, there is more. The model is only as good as the data it is fed.MyAnimeList, the website which I pulled over 50M users' public data from, has had issues historically with bots, review bombers, and othermalicious accounts. This kind of data obviously hurts the performance of the model. I did my best with common sense to filter out theseusers, but there is a very good chance a lot were still in the data. Also, unlike most recommender systems you are used to, this one(intentionally) has no inherent popularity filter. Compared to the top shows you usually hear about, there are at least 10 times moreunheard-of, and especially outdated shows. This means, by random chance, animes that nobody has ever heard of will end up at the top of therecommendations. That's just how probability works. Of course, some of these problems can be worked on, and I plan to keep updating theproject. Overall, I am happy with its recommendations so far.\n
+**A:** (Copium warning) There are many weaknesses of this kind of Recommender System. It struggles when a list contains very unpopular items, oritems that do not make sense to be together (e.g. seeing season 3 and 4 of a show, but not season 1). If you take the time to tune your list with the bot commands, it will definitely give better output. However, there is more. The model is only as good as the data it is fed.MyAnimeList, the website which I pulled over 50M users' public data from, has had issues historically with bots, review bombers, and other malicious accounts. This kind of data obviously hurts the performance of the model. I did my best with common sense to filter out these users, but there is a very good chance a lot were still in the data. Also, unlike most recommender systems you are used to where trending shows float to the top, this one (intentionally) has no inherent popularity filter, so that people can be exposed to various shows without bias. Compared to the top shows you usually hear about, there are at least 10 times more unheard-of, and especially outdated shows. This means, by random chance, animes that nobody has ever heard of will end up at the top of therecommendations. That's just how probability works. Of course, some of these problems can be worked on, and I plan to keep updating the project. Overall, I am happy with its recommendations so far.\n
+**Q:** Will the bot remember by information?
+**A:** As long as you use the same discord account, yes. All your information is tied to your discord account, and none will be deleted when you are offline.
 """
     await ctx.send(msg1)
     await ctx.send(msg2)
@@ -70,8 +73,8 @@ Long Answer, the model driving the system uses a Variational Autoencoder to lear
 @bot.command()
 async def info(ctx,*args):
     await ctx.send("""MyAniRec is a discord bot that will help you find anime recommendations based on your preferences. It runs an ML model trained on over 50 million users from myanimelist.net.
-**Step 1 (Suggested):**\nUse the `.mal set <username>` command to set your MAL account username.
-This will load all of your completed anime into the system and is much easier than typing them in one by one.
+**Step 1 (Suggested):**\nUse the `.mal set <username>` command to set your MAL (myanimelist.net) account username.
+This will load all of your completed anime into the system and is much easier than typing them in one by one. You can also feel free to input someone else's username whose tastes you trust.
 **Step 2 (Optional):**\nUse the `.rec add <anime_title>` command to add more anime to the list in case you don't have a MAL account or it is outdated. `<anime_title>` can be just part of the title, and the spelling doesn't have to be perfect either.
 The more anime you add, the better the recommendations will be. See `.tips` for how to remove anime from the list.
 **Step 3:**\nUse the `.rec complete` command to get recommendations.
@@ -99,8 +102,8 @@ For some other commands that involve multiple inputs, the bot will stop waiting 
 `.faq`: Shows frequently asked questions and background info about this bot.
 `.info`: Shows a short description of the bot and how to use it.
 `.myids`: Shows all MAL anime ids that the bot has on you. This is useful for debugging.
-`.feedback`: TODO
-`.choose <number>`: TODO
+`.feedback`: Give feedback to the bot creators. Make sure to use quotes.
+`.choose <number>`: Select a recommendation that you plan to watch, or one you like the most. This will help the ML algorithm improve in the future.
 """)
 #rec remove
 #list
@@ -187,7 +190,7 @@ async def add(ctx,*args):
     description = """Please send the number(s) for the anime(s) you are looking for. If none match, \
         send anything else and try `.rec add` again with more precise input.\n **Examples:**\
         `1 2 3` will add the first 3 animes to your list\n\
-        `3` will add thethird anime to your list"""
+        `3` will add the third anime to your list"""
     embed = discord.Embed(title="Anime Search (Add)",description=description)
     embed.insert_field_at(0,name="Options",value=b,inline=False)
     embed.set_footer(text="If you changed your mind, please use the .rec remove command to remove it.")
@@ -203,7 +206,7 @@ async def add(ctx,*args):
         ...
     await session.close()
 
-def process_recs(recs):
+def process_recs(recs,start=1):
     titles = item_map.loc[recs,"anime_title"].values
     recs = [f'[{titles[i]}](https://myanimelist.net/anime/{recs[i]})' for i in range(len(titles))]
     description = formatlist2(recs)
@@ -250,7 +253,7 @@ async def complete(ctx):
             recs = asint(db.lrange(f"{ctx.author.id}:recs",o,o+9))
             
             # await message.remove_reaction(emoji,payload.member)
-            embed = process_recs(recs)
+            embed = process_recs(recs,start=o+1)
             await message.edit(embed=embed)
             # await message.add_reaction('◀️')
             # await message.add_reaction('▶️')
@@ -290,6 +293,25 @@ async def myids(ctx,*args):
     ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1))
     await ctx.send(str(ids))
 
+@bot.command()
+async def feedback(ctx,*args): 
+    if len(args >1):
+        await ctx.send("Please enter your feedback surrounded by quotes, like so: `.feedback \"Stop giving me exactly what I want!\"`")   
+    text = args[0]
+    with open("feedback.txt","a") as f:
+        f.write(f"{ctx.author.id},{ctx.author.name},{ctx.guild},{str(datetime.now())},{text}")
+    await ctx.send("Thank you for your feedback! The bot team might reach out to you if we have any questions.")
+    
+@bot.command()
+async def choice(ctx,*args): 
+    if len(args >1):
+        await ctx.send("Please enter your feedback surrounded by quotes, like so: `.feedback \"Stop giving me exactly what I want!\"`")   
+    c = int(args[0])
+    offset = db.get(f"{ctx.author.id}:rec_offset")
+    anime_id = db.lindex(f"{ctx.author.id}:recs",offset+c-1)
+    with open("choices.txt","a") as f:
+        f.write(f"{ctx.author.id},{ctx.author.name},{ctx.guild},{str(datetime.now())},{offset-1},{anime_id}")
+    await ctx.send("Thank you for your feedback! The bot team might reach out to you if we have any questions.")
 # @bot.command()
 # async def close(ctx):    
 #     global sqldb

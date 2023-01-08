@@ -15,10 +15,10 @@ async def json_to_arr(req: starlette.requests.Request):
     a = await req.json()
     return a['array']
 
-@serve.deployment
-class Model2:
-    def __call__(self, arr: list):
-        return sum(arr)
+# @serve.deployment
+# class Model2:
+#     def __call__(self, arr: list):
+#         return sum(arr)
 
 logger = logging.getLogger("ray.serve")
 

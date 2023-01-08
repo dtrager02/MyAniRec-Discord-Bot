@@ -27,5 +27,5 @@ loop.run_until_complete(main(None))
 print(pc()-start)
 
 #regular async 1000 calls takes 2.7s
-#12 replicas 10000 calls takes 11s
+#12 replicas 10000 calls takes 11-13s
 #12 replicas 1000 calls takes 1.3s

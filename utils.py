@@ -21,11 +21,11 @@ async def fetch(session,q):
 def asint(l):
     return [int(i) for i in l]
     
-async def formatlist(data):
-    out = str("\n".join(["**{}:** {}".format(i,s[0]) for i,s in enumerate(data, start=1)]))
+async def formatlist(data,start=1):
+    out = str("\n".join(["**{}:** {}".format(i,s[0]) for i,s in enumerate(data, start=start)]))
     return out
-def formatlist2(data):
-    out = str("\n".join(["**{}:** {}".format(i,s) for i,s in enumerate(data, start=1)]))
+def formatlist2(data,start=1):
+    out = str("\n".join(["**{}:** {}".format(i,s) for i,s in enumerate(data, start=start)]))
     return out
 async def get_ranking(data,converter,seen_items):
     seen = converter.loc[converter.index.isin(seen_items),"train_id"].values

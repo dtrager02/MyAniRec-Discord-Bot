@@ -1,0 +1,1 @@
+https://discord.com/api/oauth2/authorize?client_id=1058523711570980865&permissions=534723815520&redirect_uri=https%3A%2F%2Fwww.reddit.com%2Fr%2FPurdue%2F&response_type=code&scope=bot%20messages.read
