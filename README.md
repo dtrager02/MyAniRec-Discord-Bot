@@ -13,6 +13,7 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 4. Copy dump.rdb to redis-stable
 5. Create this job file if using one node
 ```bash
+  export PATH="$HOME/.local/bin:$PATH" # on purdue servers using global pip
   ray start --head --port=6400
   serve deploy server.yaml
   # can run python3 benchmark.py to ensure server is working
