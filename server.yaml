@@ -2,7 +2,7 @@
 
 import_path: modelserver:m
 
-runtime_env: {config: {num_cpus: 16}}
+runtime_env: {}
 
 host: 127.0.0.1
 
@@ -11,4 +11,7 @@ port: 8123
 deployments:
 
 - name: Model
-  num_replicas: 12
+  num_replicas: 6
+  max_concurrent_queries: 150
+  ray_actor_options:
+    num_cpus: 1.0
