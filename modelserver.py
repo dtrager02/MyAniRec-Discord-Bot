@@ -13,7 +13,7 @@ import logging
 
 async def json_to_arr(req: starlette.requests.Request):
     a = await req.json()
-    return a['array']
+    return a['good'] , a['bad']
 
 # @serve.deployment
 # class Model2:
@@ -32,11 +32,11 @@ class Model:
         self.model.eval()    
         self.preprocessor = preprocessor
     async def __call__(self, req: starlette.requests.Request):
-        ids = await json_to_arr(req)
-        input = self.preprocessor.generate_user_tensor(ids)
+        good_ids,bad_ids = await json_to_arr(req)
+        input = self.preprocessor.generate_user_tensor(good_ids)
         #print(input.shape,"abcd",flush=True)
         output,_,_ = self.model(torch.from_numpy(input))
-        ranks =self.preprocessor.get_ranking(output,ids)
+        ranks =self.preprocessor.get_ranking(output,good_ids+bad_ids)
         #print(pc()-start,"time taken total",flush=True)
         return {"ranks":ranks}
     # async def calldirect(self, ids):
@@ -63,7 +63,6 @@ class Preprocessor:
     
 
     def generate_user_tensor(self,items):
-        start = pc()
         out = torch.zeros((1,self.item_map.shape[0]))
         res = self.item_map.loc[self.item_map.index.isin(items),"train_id"].values
         out[0,res] = 1

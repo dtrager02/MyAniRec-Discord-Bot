@@ -45,8 +45,10 @@ def get_liked_anime(res:dict):
     res = np.array([[s['anime_id'],s['score']] for s in res['content'] if s['status'] == 2])
     if len(res) == 0:
         return []
-    res = res[res[:,1]>=np.median(res[:,1]),0].tolist()
-    return res
+    res1 = res[res[:,1]>=np.median(res[:,1]),0].tolist()
+    res2 = res[res[:,1]<np.median(res[:,1]),0].tolist()
+    #liked,disliked
+    return res1,res2
 
 async def get_anime_ids(res:dict):
     return [s['anime_id'] for s in res['content'] if s['status'] == 2]

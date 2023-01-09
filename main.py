@@ -40,7 +40,7 @@ value: last heavy command timestamp
 async def on_ready():
     global sqldb
     sqldb = await aiosqlite.connect("./animeinfo.sqlite3")
-    await bot.change_presence(activity=discord.Game(name="DM me .info to begin!"))
+    await bot.change_presence(activity=discord.Game(name="DM me /info to begin!"))
     print(f'Logged on as {bot.user}!')
 
 @bot.group()
@@ -69,55 +69,45 @@ Long Answer, the model driving the system uses a Variational Autoencoder to lear
 """
     await ctx.send(msg1)
     await ctx.send(msg2)
+    await ctx.send(msg3)
 
 @bot.command()
 async def info(ctx,*args):
     await ctx.send("""MyAniRec is a discord bot that will help you find anime recommendations based on your preferences. It runs an ML model trained on over 50 million users from myanimelist.net.
-**Step 1 (Suggested):**\nUse the `.mal set <username>` command to set your MAL (myanimelist.net) account username.
+**Step 1 (Suggested):**\nUse the `/mal set <username>` command to set your MAL (myanimelist.net) account username.
 This will load all of your completed anime into the system and is much easier than typing them in one by one. You can also feel free to input someone else's username whose tastes you trust.
-**Step 2 (Optional):**\nUse the `.rec add <anime_title>` command to add more anime to the list in case you don't have a MAL account or it is outdated. `<anime_title>` can be just part of the title, and the spelling doesn't have to be perfect either.
-The more anime you add, the better the recommendations will be. See `.tips` for how to remove anime from the list.
-**Step 3:**\nUse the `.rec complete` command to get recommendations.
-**Step 4 (Optional):**\nUse the `.choose <number>` command to indicate which recommendation appealed to you the most.
+**Step 2 (Optional):**\nUse the `/rec add <anime_title>` command to add more anime to the list in case you don't have a MAL account or it is outdated. `<anime_title>` can be just part of the title, and the spelling doesn't have to be perfect either.
+The more anime you add, the better the recommendations will be. See `/tips` for how to remove anime from the list.
+**Step 3:**\nUse the `/rec complete` command to get recommendations.
+**Step 4 (Optional):**\nUse the `/choose <number>` command to indicate which recommendation appealed to you the most.
 This feedback will help me improve the bot and recommender system greatly!
-**Step 5 (Optional):**\nUse the `.feedback "<>"` command to give feedback on the recommendations and/or bot. (Make sure to use quotes)\n
+**Step 5 (Optional):**\nUse the `/feedback "<>"` command to give feedback on the recommendations and/or bot. (Make sure to use quotes)\n
 Keep in mind the bot will remember all your input, so no need to repeat old commands unless you want to change something. 
-Speaking of changing input, are several other useful commands for managing your anime list and recommendations. Enter `.tips` to find them. Also check out `.faq` if you are confused.""")
+Speaking of changing input, are several other useful commands for managing your anime list and recommendations. Enter `.tips` to find them. Also check out `/faq` if you are confused.""")
     
 @bot.command()
 async def tips(ctx):
-    await ctx.send("""**Timeouts:** For 'heavy' commands like `.rec complete` and `.mal set`, you must wait **3 seconds** between each command. 
+    await ctx.send("""**Timeouts:** For 'heavy' commands like `/rec complete` and `/mal set`, you must wait **3 seconds** between each command. 
 Most other commands will have virtually  no limit, so spam away.
 For some other commands that involve multiple inputs, the bot will stop waiting for inputs after **6 minutes**. Youalways restart the command if you need to. 
 **Saving:** The bot will remember all your input, so no need to repeat old commands unless you want to change something. 
 **Commands:** <> indicates a required input, [] indicates an optional input*. You do not need to literally input symbols. All unrequired input will be ignored.
-`.mal set <username>`: Set your MAL username. This will load all of your completed anime into the system and is much eathan typing them in one by one.
-`.mal remove`: Delete all your MAL data. If you use this, the anime you manually entered with the .rec command will still be there, so it is useful if you like manual tuning without MAL.
-`.rec add <anime_title>`: Add an anime to your list. Follow the directions in the bot's response. You will be able to add multiple at once by inputting the numbers separated by spaces.
-`.rec remove <anime_title>`: Remove an anime from your list. Follow the directions in the bot's response. Due to the way the bot works, there is no way to remove an anime from a linked MAL account. If you don't like certain ratings in your MAL, do `.mal remove` and manually add them back with `.rec add`, or simply update your MAL account.
-`.rec complete`: Get recommendations. Follow the directions in the bot's response to see more pages of recommendations.
-`.rec clear`: Remove all your added anime. Does not remove MAL-related data.
-`.list`: Lists all the data the bot has on you. This is useful for making sure you are ready before `.rec complete`.
+`/mal set <username>`: Set your MAL username. This will load all of your completed anime into the system and is much eathan typing them in one by one.
+`/mal remove`: Delete all your MAL data. If you use this, the anime you manually entered with the /rec command will still be there, so it is useful if you like manual tuning without MAL.
+`/rec add <anime_title>`: Add an anime to your list. Follow the directions in the bot's response. You will be able to add multiple at once by inputting the numbers separated by spaces.
+`/rec remove <anime_title>`: Remove an anime from your list. Follow the directions in the bot's response. Due to the way the bot works, there is no way to remove an anime from a linked MAL account. If you don't like certain ratings in your MAL, do `/mal remove` and manually add them back with `/rec add`, or simply update your MAL account.
+`/rec complete`: Get recommendations. Follow the directions in the bot's response to see more pages of recommendations.
+`/rec clear`: Remove all your added anime. Does not remove MAL-related data.
+`/list`: Lists all the data the bot has on you. This is useful for making sure you are ready before `/rec complete`.
 """)
     await ctx.send("""`.tips`: Shows this message.
-`.faq`: Shows frequently asked questions and background info about this bot.
-`.info`: Shows a short description of the bot and how to use it.
-`.myids`: Shows all MAL anime ids that the bot has on you. This is useful for debugging.
-`.feedback`: Give feedback to the bot creators. Make sure to use quotes.
-`.choose <number>`: Select a recommendation that you plan to watch, or one you like the most. This will help the ML algorithm improve in the future.
+`/faq`: Shows frequently asked questions and background info about this bot.
+`/info`: Shows a short description of the bot and how to use it.
+`/myids`: Shows all MAL anime ids that the bot has on you. This is useful for debugging.
+`/feedback`: Give feedback to the bot creators. Make sure to use quotes.
+`/choose <number>`: Select a recommendation that you plan to watch, or one you like the most. This will help the ML algorithm improve in the future.
 """)
-#rec remove
-#list
-#restart    
-#tips
-#choose
-# feedback
-# about
-# faq 
-#TODO
-#possibly persist requests session
-#add caching for recs if no input has changed
-#persist redis db and handle large data, large discord logs
+
 def check_cooldown(func):
     @wraps(func)
     async def wrapper(*args,**kwargs):
@@ -150,16 +140,18 @@ async def set(ctx,*args):
         await ctx.send("Error retrieving data. Please check your username and try again.")
         session.close()
         return
-    b = get_liked_anime(a)
-    if len(b) == 0:
-        await ctx.send("This user has no completed anime. Please add some manually with `.rec add <anime_title>`.")
+    good,bad = get_liked_anime(a)
+    if len(good) == 0:
+        await ctx.send("This user has no completed anime. Please add some manually with `/rec add <anime_title>`.")
         session.close()
         return
     with db.pipeline() as pipe:
         pipe.delete(f"{ctx.author.id}:mal_anime_ids")
+        pipe.delete(f"{ctx.author.id}:bad_anime_ids")
         pipe.set(f"{ctx.author.id}:mal",username)
         # pipe.set(f"{ctx.author.id}:mal_anime_ids",[])
-        pipe.rpush(f"{ctx.author.id}:mal_anime_ids",*b)
+        pipe.rpush(f"{ctx.author.id}:mal_anime_ids",*good)
+        pipe.rpush(f"{ctx.author.id}:bad_anime_ids",*bad)
         pipe.execute()
     # last_heavy[ctx.author.id] = perf_counter()
     await session.close()
@@ -170,6 +162,7 @@ async def remove(ctx):
     with db.pipeline() as pipe:
         pipe.delete(f"{ctx.author.id}:mal")
         pipe.delete(f"{ctx.author.id}:mal_anime_ids")
+        pipe.delete(f"{ctx.author.id}:bad_anime_ids")
         pipe.execute()
     await ctx.send("Done!")
     
@@ -194,26 +187,26 @@ async def clear(ctx):
 async def add(ctx,*args):
     title = " ".join(args)
     if len(title) == 0:
-        await ctx.send("Please enter the title of the anime you want to add. Ex. `.rec add Naruto`")
+        await ctx.send("Please enter the title of the anime you want to add. Ex. `/rec add Naruto`")
         return
     session = aiohttp.ClientSession()
     a = await fetch(session,title)
     b = await formatlist(a)
     ##########################
     description = """Please send the number(s) for the anime(s) you are looking for. If none match, \
-        send anything else and try `.rec add` again with more precise input.\n **Examples:**\
+        send anything else and try `/rec add` again with more precise input.\n **Examples:**\
         `1 2 3` will add the first 3 animes to your list\n\
         `3` will add the third anime to your list"""
     embed = discord.Embed(title="Anime Search (Add)",description=description)
     embed.insert_field_at(0,name="Options",value=b,inline=False)
-    embed.set_footer(text="If you changed your mind, please use the .rec remove command to remove it.")
+    embed.set_footer(text="If you changed your mind, please use the /rec remove command to remove it.")
     await ctx.send(embed=embed)
     ##########################
     msg = await bot.wait_for('message',check=lambda message: message.author == ctx.author,timeout=360.0)
     try:
         choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
         db.sadd(f"{ctx.author.id}:added_anime_ids",*choices)  
-        await ctx.send(f"Added {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])}to your list!")
+        await ctx.send(f"Added {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])} to your list!")
     except Exception as e:
         # print(e.with_traceback())
         ...
@@ -232,7 +225,8 @@ def process_recs(recs,start=1):
 @rec.command()
 @check_cooldown
 async def complete(ctx):
-    ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1)) #WHY IS THIS RETURNING STRINGS
+    good_ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1)) #WHY IS THIS RETURNING STRINGS
+    bad_ids = asint(db.lrange(f"{ctx.author.id}:bad_anime_ids",0,-1))
     # Old ML logic
     # a = await generate_user_tensor(ids,item_map=item_map)
     # output,_,_ = model(a)
@@ -240,7 +234,7 @@ async def complete(ctx):
     
     #New ML logic
     session = aiohttp.ClientSession()
-    ranks = await session.post("http://127.0.0.1:8000", json={"array": ids})
+    ranks = await session.post("http://127.0.0.1:8000", json={"good": good_ids,"bad": bad_ids})
     ranks = await ranks.json()
     ranks = ranks['ranks']
     await session.close()
@@ -270,12 +264,9 @@ async def complete(ctx):
                 o = max(o-10,0)
             db.set(f"{ctx.author.id}:rec_offset",o)
             recs = asint(db.lrange(f"{ctx.author.id}:recs",o,o+9))
-            
-            # await message.remove_reaction(emoji,payload.member)
             embed = process_recs(recs,start=o+1)
             await message.edit(embed=embed)
-            # await message.add_reaction('◀️')
-            # await message.add_reaction('▶️')
+
         except asyncio.TimeoutError as e:
             # print(f"Timeout,{message.author.id}")
             # print(e)
@@ -285,23 +276,23 @@ async def complete(ctx):
 async def remove(ctx,*args):    
     title = " ".join(args)
     if len(title) == 0:
-        await ctx.send("Please enter the title of the anime you want to remove. Ex. `.rec remove Naruto`")
+        await ctx.send("Please enter the title of the anime you want to remove. Ex. `/rec remove Naruto`")
     session = aiohttp.ClientSession()
     a = await fetch(session,title)
     b = await formatlist(a)
     ##########################
     description = """Please send the number for the anime you are looking for. If none match, \
-        send anything else and try `.rec add` again with more precise spelling."""
+        send anything else and try `/rec remove` again with more precise spelling."""
     embed = discord.Embed(title="Anime Search (Remove)",description=description)
     embed.insert_field_at(0,name="Options",value=b,inline=False)
-    embed.set_footer(text="If you changed your mind, please use the .rec remove command to remove it.")
+    embed.set_footer(text="If you changed your mind, please use the /rec remove command to remove it.")
     await ctx.send(embed=embed)
     ##########################
     msg = await bot.wait_for('message',check=lambda message: message.author == ctx.author,timeout=360.0)
     try:
         choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
         db.srem(f"{ctx.author.id}:added_anime_ids",*choices)  
-        await ctx.send(f"Removed {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])}from your list!")
+        await ctx.send(f"Removed {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])} from your list!")
     except Exception as e:
         # print(e.with_traceback())
         ...
