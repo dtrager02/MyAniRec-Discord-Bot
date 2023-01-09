@@ -13,13 +13,14 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 4. Copy dump.rdb to 
 5. Create this job file if using one node
 ```bash
-  "firstName": "John",
-  "lastName": "Smith",
-  "age": 25
+  ray start --head --port=6400
+  serve deploy server.yaml
+  # can run python3 benchmark.py to ensure server is working
+  #set redis config to daeomonize and save more frequently
+  redis-stable/src/redis-server redis-stable/redis.conf
+  nohup python3 main.py
 }
 ```
-6. module load slurm
-7. sbtach jobfile
 ## TODO
 - [ ] Write the official documentation, blog
 - [ ] Clean up code
