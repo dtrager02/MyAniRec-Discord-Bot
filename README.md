@@ -10,7 +10,7 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 1. Git clone this repository
 2. scp token and existing Redis dump files to server
 3. Install Redis from source
-4. Copy dump.rdb to 
+4. Copy dump.rdb to redis-stable
 5. Create this job file if using one node
 ```bash
   ray start --head --port=6400
