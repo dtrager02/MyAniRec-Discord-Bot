@@ -19,14 +19,14 @@ async def json_to_arr(req: starlette.requests.Request):
 # class Model2:
 #     def __call__(self, arr: list):
 #         return sum(arr)
-
+# ray.init(ignore_reinit_error=True, num_cpus=20)
 logger = logging.getLogger("ray.serve")
 
 @serve.deployment(ray_actor_options={"num_cpus": 1},num_replicas=12,max_concurrent_queries=150)
 class Model:
     def __init__(self,model_path,preprocessor) -> None:
         sys.path.insert(0, './models')
-        logger.info("Hello world!")
+        print("Hello world!")
         logger.setLevel(logging.ERROR)
         self.model = torch.load(model_path,map_location=torch.device('cpu'))
         self.model.eval()    
@@ -55,7 +55,7 @@ class Preprocessor:
         # start = pc()
         seen = self.item_map.loc[self.item_map.index.isin(seen_items),"train_id"].values
         data = data2.detach().clone()
-        data[0,seen] = -torch.inf
+        data[0,seen] = float('-inf')
         out_sorted = torch.argsort(data,dim=1,descending=True)
         out_sorted_converted = self.item_map.reset_index().set_index("train_id").loc[out_sorted[0,:400].tolist(),"item_id"].values
         #print(pc()-start,"time taken rank",flush=True)
@@ -82,10 +82,10 @@ class Preprocessor:
 
 p = Preprocessor("item_map.csv")
 m = Model.bind("models/multvae.pt",p)
-# graph = DAGDriver.bind(m, http_adapter=json_to_arr)
-handle = serve.run(m)
-loop = asyncio.get_event_loop()
-loop.run_until_complete(asyncio.sleep(2**31))
+# graph = DAGDriver.bind(m)
+# handle = serve.run(m,port=8123)
+# loop = asyncio.get_event_loop()
+# loop.run_until_complete(asyncio.sleep(2**31))
 ####################HTTP RAY BENCH
 # policy = asyncio.WindowsSelectorEventLoopPolicy()
 # asyncio.set_event_loop_policy(policy)

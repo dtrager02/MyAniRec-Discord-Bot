@@ -39,6 +39,7 @@ async def main(session):
     b = await formatlist(a)
     print(b)
     await session.close()
+    
 if __name__ == '__main__':
     session = aiohttp.ClientSession()
     loop = asyncio.get_event_loop()
