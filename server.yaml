@@ -1,18 +1,14 @@
 # This file was generated using the `serve build` command on Ray v2.2.0.
 
-import_path: modelserver:graph
+import_path: modelserver:m
 
 runtime_env: {config: {num_cpus: 16}}
 
-host: 0.0.0.0
+host: 127.0.0.1
 
-port: 8000
+port: 8123
 
 deployments:
 
-- name: Preprocessor
-
 - name: Model
-
-- name: DAGDriver
-  route_prefix: /
+  num_replicas: 12
