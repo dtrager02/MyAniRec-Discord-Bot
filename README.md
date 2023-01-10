@@ -28,7 +28,7 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 - [ ] Optimize Redis schema
 - [ ] Add Redis to sql{ite?} backup system
 - [ ] Figure out way to use a global aiohttp.Clientsession 
-- [ ] create proper install and run scripts
+- [x] create proper install and run scripts
 - [ ] Reformat Pytorch model architecture to speed up torchscript, and enable using intel MKL
 - [ ] Add cache for .rec complete if nothing has changed since previous
 - [ ] Add structured logging?
