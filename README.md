@@ -32,4 +32,5 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 - [ ] Reformat Pytorch model architecture to speed up torchscript, and enable using intel MKL
 - [ ] Add cache for .rec complete if nothing has changed since previous
 - [ ] Add structured logging?
-- [ ] Figure out slash commands
+- [ ] Figure out application commands
+- [ ] Deal with potential MAL rate limits.
