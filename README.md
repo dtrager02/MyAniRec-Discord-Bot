@@ -23,6 +23,7 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 }
 ```
 ## TODO
+- [ ] Add english support in lists, anime metadata in embeds
 - [ ] Write the official documentation, blog
 - [ ] Clean up code
 - [ ] Optimize Redis schema
