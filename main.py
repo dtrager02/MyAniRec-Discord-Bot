@@ -83,7 +83,7 @@ The more anime you add, the better the recommendations will be. See `/tips` for 
 This feedback will help me improve the bot and recommender system greatly!
 **Step 5 (Optional):**\nUse the `/feedback "<>"` command to give feedback on the recommendations and/or bot. (Make sure to use quotes)\n
 Keep in mind the bot will remember all your input, so no need to repeat old commands unless you want to change something. 
-Speaking of changing input, are several other useful commands for managing your anime list and recommendations. Enter `.tips` to find them. Also check out `/faq` if you are confused.""")
+Speaking of changing input, are several other useful commands for managing your anime list and recommendations. Enter `/tips` to find them. Also check out `/faq` if you are confused.""")
     
 @bot.command()
 async def tips(ctx):
@@ -100,7 +100,7 @@ For some other commands that involve multiple inputs, the bot will stop waiting 
 `/rec clear`: Remove all your added anime. Does not remove MAL-related data.
 `/list`: Lists all the data the bot has on you. This is useful for making sure you are ready before `/rec complete`.
 """)
-    await ctx.send("""`.tips`: Shows this message.
+    await ctx.send("""`/tips`: Shows this message.
 `/faq`: Shows frequently asked questions and background info about this bot.
 `/info`: Shows a short description of the bot and how to use it.
 `/myids`: Shows all MAL anime ids that the bot has on you. This is useful for debugging.
