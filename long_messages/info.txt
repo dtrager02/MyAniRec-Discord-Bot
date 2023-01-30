@@ -1,0 +1,17 @@
+MyAniRec is a discord bot that will help you find anime recommendations based on your preferences. It runs an ML model trained on over 50 million users from myanimelist.net.
+**Step 1 (Suggested):**
+Use the `/mal set <username>` command to set your MAL (myanimelist.net) account username.
+This will load all of your completed anime into the system and is much easier than typing them in one by one. You can also feel free to input someone else's username whose tastes you trust.
+**Step 2 (Optional):**
+Use the `/rec add <anime_title>` command to add more anime to the list in case you don't have a MAL account or it is outdated. `<anime_title>` can be just part of the title, and the spelling doesn't have to be perfect either.
+The more anime you add, the better the recommendations will be. See `/tips` for how to remove anime from the list.
+**Step 3:**
+Use the `/rec complete` command to get recommendations.
+**Step 4 (Optional):**
+Use the `/choose <number>` command to indicate which recommendation appealed to you the most.
+This feedback will help me improve the bot and recommender system greatly!
+**Step 5 (Optional):**
+Use the `/feedback "<>"` command to give feedback on the recommendations and/or bot. (Make sure to use quotes)
+
+Keep in mind the bot will remember all your input, so no need to repeat old commands unless you want to change something.
+Speaking of changing input, are several other useful commands for managing your anime list and recommendations. Enter `/tips` to find them. Also check out `/faq` if you are confused.
