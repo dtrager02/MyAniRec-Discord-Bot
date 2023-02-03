@@ -6,3 +6,6 @@ url.txt
 __pycache__/
 dump.rdb
 old/*
+redis-stable/
+*.out
+*.sub

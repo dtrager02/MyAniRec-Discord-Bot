@@ -22,7 +22,7 @@ model = torch.load("models/multvae.pt",map_location=torch.device('cpu'))
 model.eval()
 bot = commands.Bot(command_prefix="/",intents=intents)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('discord')
 
 rec = discord.SlashCommandGroup("rec", "Recommendation related commands")
