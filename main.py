@@ -36,17 +36,13 @@ FAQ = open("long_messages/faq.txt","r").read().split(DELIM)
 db format:
 key: user
 value: dict(
-    keys: "mal", "recs", "mal_anime_ids","added_anime_ids"
+    keys: "mal", "recs", "mal_anime_ids","added_anime_ids,
+    "bad_anime_ids" : this is a list of anime sthe user has seen, but not liked. we remove these from the recs
     values: mal username, set of recs, set of mal anime ids, set of manually added anime ids
 )    
-feedback will be stored in sqlite 
+feedback will be stored in text
 """
 last_heavy = dict() 
-"""
-db format:
-key: user
-value: last heavy command timestamp
-"""
 
 @bot.event
 async def on_ready():
@@ -57,7 +53,10 @@ async def on_ready():
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
-    await(ctx.respond(":stop_sign: " + str(error) + " :stop_sign:"))
+    if error.isinstance(commands.CommandOnCooldown):
+        await(ctx.respond(":stop_sign: " + str(error) + " :stop_sign:"))
+    else:
+        raise error
 
 @bot.slash_command()
 async def faq(ctx):
@@ -89,6 +88,7 @@ async def tips(ctx):
             await ctx.respond(msg)
             flag = True
 
+#OLD COOLDOWN FUNCTION
 def check_cooldown(func):
     @wraps(func)
     async def wrapper(*args,**kwargs):
@@ -107,7 +107,7 @@ def check_cooldown(func):
 def check_cooldown2(ctx):
     if ctx.author.id in last_heavy:
         if perf_counter() - last_heavy[ctx.author.id] < 3:
-            raise commands.CommandError("Please wait a few seconds before using this command again.")
+            raise commands.CommandOnCooldown("Please wait a few seconds before using this command again.")
     last_heavy[ctx.author.id] = perf_counter()
     return True
 
@@ -231,10 +231,6 @@ async def process_recs(recs,language,start=1):
 async def complete(ctx):
     good_ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1)) #WHY IS THIS RETURNING STRINGS
     bad_ids = asint(db.lrange(f"{ctx.author.id}:bad_anime_ids",0,-1))
-    # Old ML logic
-    # a = await generate_user_tensor(ids,item_map=item_map)
-    # output,_,_ = model(a)
-    # ranks = await get_ranking(output,item_map,ids)
     
     #New ML logic
     session = aiohttp.ClientSession()
