@@ -16,7 +16,7 @@ async def main(handle):
     async with aiohttp.ClientSession(trust_env = True) as session:
         # tasks = [fetchhandle(session, handle,i/1000.0) for i in range(10000)]
         tasks = [fetch(session, "http://localhost:8000",i/10.0) for i in range(10)]
-       	resps = await asyncio.gather(*tasks)
+        resps = await asyncio.gather(*tasks)
         text = await resps[0].text()
         print(text)
         jsons_ = [resp.json() for resp in resps]
