@@ -22,7 +22,7 @@ model = torch.load("models/multvae.pt",map_location=torch.device('cpu'))
 model.eval()
 bot = commands.Bot(command_prefix="/",intents=intents)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('discord')
 
 rec = discord.SlashCommandGroup("rec", "Recommendation related commands")
@@ -53,10 +53,10 @@ async def on_ready():
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
-    if error.isinstance(commands.CommandOnCooldown):
+    if isinstance(error,commands.CommandOnCooldown):
         await(ctx.respond(":stop_sign: " + str(error) + " :stop_sign:"))
     else:
-        raise error
+        logger.error(error.with_traceback(error.__traceback__))
 
 @bot.slash_command()
 async def faq(ctx):
