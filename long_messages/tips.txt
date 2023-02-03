@@ -9,6 +9,7 @@ For some other commands that involve multiple inputs, the bot will stop waiting 
 `/rec remove <anime_title>`: Remove an anime from your list. Follow the directions in the bot's response. Due to the way the bot works, there is no way to remove an anime from a linked MAL account. If you don't like certain ratings in your MAL, do `/mal remove` and manually add them back with `/rec add`, or simply update your MAL account.
 `/rec complete`: Get recommendations. Follow the directions in the bot's response to see more pages of recommendations.
 `/rec clear`: Remove all your added anime. Does not remove MAL-related data.
+`/rec lang <en/jp>`: Change default language of recommendations
 `/list`: Lists all the data the bot has on you. This is useful for making sure you are ready before `/rec complete`.[split]
 `/tips`: Shows this message.
 `/faq`: Shows frequently asked questions and background info about this bot.

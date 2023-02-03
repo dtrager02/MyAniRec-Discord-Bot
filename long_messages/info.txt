@@ -8,9 +8,6 @@ The more anime you add, the better the recommendations will be. See `/tips` for 
 **Step 3:**
 Use the `/rec complete` command to get recommendations.
 **Step 4 (Optional):**
-Use the `/choose <number>` command to indicate which recommendation appealed to you the most.
-This feedback will help me improve the bot and recommender system greatly!
-**Step 5 (Optional):**
 Use the `/feedback "<>"` command to give feedback on the recommendations and/or bot. (Make sure to use quotes)
 
 Keep in mind the bot will remember all your input, so no need to repeat old commands unless you want to change something.
