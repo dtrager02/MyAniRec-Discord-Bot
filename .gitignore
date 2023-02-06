@@ -10,3 +10,4 @@ redis-stable/
 *.out
 *.sub
 models
+beta.txt

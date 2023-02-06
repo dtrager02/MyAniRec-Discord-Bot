@@ -12,6 +12,8 @@ from time import perf_counter
 import pandas as pd
 import torch
 import sys
+from dropdowns import *
+
 intents = discord.Intents.default()
 intents.message_content = True
 # intents.presences = True
@@ -53,10 +55,10 @@ async def on_ready():
 
 @bot.event
 async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
-    if isinstance(error,commands.CommandOnCooldown):
+    if isinstance(error,commands.CommandError):
         await(ctx.respond(":stop_sign: " + str(error) + " :stop_sign:"))
     else:
-        logger.error(error.with_traceback(error.__traceback__))
+        raise error
 
 @bot.slash_command()
 async def faq(ctx):
@@ -88,26 +90,10 @@ async def tips(ctx):
             await ctx.respond(msg)
             flag = True
 
-#OLD COOLDOWN FUNCTION
-def check_cooldown(func):
-    @wraps(func)
-    async def wrapper(*args,**kwargs):
-        global last_heavy
-        ctx = args[0]
-        if ctx.author.id in last_heavy:
-            if perf_counter() - last_heavy[ctx.author.id] < 10:
-                await ctx.send("Please wait a few seconds before using this command again.")
-                return
-        start = perf_counter()
-        await func(*args,**kwargs)
-        logger.info(f"function {func.__name__} took {perf_counter() - start}")
-        last_heavy[ctx.author.id] = perf_counter()
-    return wrapper
-
 def check_cooldown2(ctx):
     if ctx.author.id in last_heavy:
         if perf_counter() - last_heavy[ctx.author.id] < 3:
-            raise commands.CommandOnCooldown("Please wait a few seconds before using this command again.")
+            raise commands.CommandError("Please wait a few seconds before using this command again.")
     last_heavy[ctx.author.id] = perf_counter()
     return True
 
@@ -172,8 +158,9 @@ async def lang(ctx,language: discord.Option(str)):
         return
     db.set(f"{ctx.author.id}:lang",language)
     await ctx.respond("Done! Keep in mind titles will default to Japanese if a translation is not available.")
-
+        
 @rec.command(description="Add an anime to your list.")
+@commands.check(check_cooldown2)
 async def add(ctx,title: discord.Option(str,description="The title of the anime you want to add to your list.",required=True)):
     if len(title) == 0:
         await ctx.respond("Please enter the title of the anime you want to add. Ex. `/rec add Naruto`")
@@ -181,25 +168,14 @@ async def add(ctx,title: discord.Option(str,description="The title of the anime 
     session = aiohttp.ClientSession()
     a = await fetch(session,title)
     await session.close()
-    b = await formatlist(a)
+    # b = await formatlist(a)
     ##########################
-    description = """Please send the number(s) for the anime(s) you are looking for. If none match, \
-        send anything else and try `/rec add` again with more precise input.\n **Examples:**\
-        `1 2 3` will add the first 3 animes to your list\n\
-        `3` will add the third anime to your list"""
-    embed = discord.Embed(title="Anime Search (Add)",description=description)
-    embed.insert_field_at(0,name="Options",value=b,inline=False)
+    description = """Please use the menu below to select the anime(s) you are looking for. If none match, try `/rec add` again with more precise input."""
+    embed = discord.Embed(title="Anime Search (Add)",description=description,color=discord.Color(0x2e51a2))
     embed.set_footer(text="If you changed your mind, please use the /rec remove command to remove it.")
-    await ctx.respond(embed=embed)
-    ##########################
-    msg = await bot.wait_for('message',check=lambda message: message.author == ctx.author,timeout=360.0)
-    # print(msg.content)
-    try:
-        choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
-        db.sadd(f"{ctx.author.id}:added_anime_ids",*choices)  
-        await ctx.send(f"Added {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])} to your list!")
-    except Exception as e:
-        logger.error(e)
+    myselect = MySelect(a,db=db,ctx=ctx)
+    myview = discord.ui.View(myselect,timeout=60)
+    await ctx.respond(embed=embed,view=myview)
 
 async def process_recs(recs,language,start=1):
     #recs are item ids 
@@ -220,7 +196,7 @@ async def process_recs(recs,language,start=1):
                                  f'[{df.loc[i,lang_col]}](https://myanimelist.net/anime/{i})',
                                  df.loc[i,"score"],
                                  ', '.join(df.loc[i,"genres"].split(";"))) for i in df.index]
-    combined_templates = "\n\n".join(templates)
+    combined_templates = "\n".join(templates)
     embed = discord.Embed(title="Your Recommendations:",description=combined_templates,color=discord.Color(0x2e51a2))
     embed.set_footer(text="React (Double Click) using the arrows to browse more recommendations.")
     return embed
@@ -228,10 +204,9 @@ async def process_recs(recs,language,start=1):
 
 @rec.command(description="Get personalized recommendations based on your list.")
 @commands.check(check_cooldown2)
-async def complete(ctx):
+async def complete(ctx:discord.ApplicationContext):
     good_ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1)) #WHY IS THIS RETURNING STRINGS
     bad_ids = asint(db.lrange(f"{ctx.author.id}:bad_anime_ids",0,-1))
-    
     #New ML logic
     session = aiohttp.ClientSession()
     ranks = await session.post("http://127.0.0.1:8000", json={"good": good_ids,"bad": bad_ids})
@@ -275,6 +250,7 @@ async def complete(ctx):
             break
 
 @rec.command(description="Remove an anime from your list.")
+@commands.check(check_cooldown2)
 async def remove(ctx,title: discord.Option(str,description="The title of the anime you want to remove from your list.",required=True)):    
     # title = " ".join(titles)
     if len(title) == 0:
@@ -283,27 +259,29 @@ async def remove(ctx,title: discord.Option(str,description="The title of the ani
     session = aiohttp.ClientSession()
     a = await fetch(session,title)
     await session.close()
-    b = await formatlist(a)
+    # b = await formatlist(a)
     ##########################
-    description = """Please send the number for the anime you are looking for. If none match, \
-        send anything else and try `/rec remove` again with more precise spelling."""
-    embed = discord.Embed(title="Anime Search (Remove)",description=description)
-    embed.insert_field_at(0,name="Options",value=b,inline=False)
+    description = """Please send the number for the anime you are looking for. If none match, try `/rec remove` again with more precise spelling."""
+    embed = discord.Embed(title="Anime Search (Remove)",description=description,color=discord.Color(0x2e51a2))
+    # embed.insert_field_at(0,name="Options",value=b,inline=False)
     embed.set_footer(text="If you changed your mind, please use the /rec remove command to remove it.")
-    await ctx.respond(embed=embed)
-    ##########################
-    msg = await bot.wait_for('message',check=lambda message: message.author == ctx.author,timeout=360.0)
-    try:
-        choices = [a[int(s)-1][1] for s in msg.content.split(" ") if s.isdigit()]
-        db.srem(f"{ctx.author.id}:added_anime_ids",*choices)  
-        await ctx.send(f"Removed {', '.join([a[int(s)-1][0] for s in msg.content.split(' ') if s.isdigit()])} from your list!")
-    except Exception as e:
-        logger.error(e)
+    myselect = MySelect(a,db=db,ctx=ctx,mode="remove")
+    myview = discord.ui.View(myselect,timeout=60)
+    await ctx.respond(embed=embed,view=myview)
 
 @bot.slash_command(description="MAL anime ids of your list.")
 async def myids(ctx):    
     ids = asint(db.smembers(f'{ctx.author.id}:added_anime_ids')) +  asint(db.lrange(f"{ctx.author.id}:mal_anime_ids",0,-1))
     await ctx.respond(str(ids))
+
+@bot.slash_command(description="Support the bot!")
+async def support(ctx):    
+    description = """If you would like to support the bot, please consider:
+    **Voting** on top.gg and inviting it to your own server [here](https://top.gg/bot/1058523711570980865/vote) :heart:
+    **Starring** the [Github](https://github.com/dtrager02/MyAniRec-Discord-Bot) :star:
+    **Donating** to the bot's [Patreon](patreon.com/MyAniRec)! :dollar:
+    """
+    await ctx.respond(embed=discord.Embed(title="Thank you!",description=description,color=discord.Color(0x2e51a2)))
 
 @bot.slash_command(description="Submit feedback")
 async def feedback(ctx, arg: discord.Option(str,name="feedback",required=True)): 
