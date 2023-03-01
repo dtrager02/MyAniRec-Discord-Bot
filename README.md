@@ -31,3 +31,6 @@ Python, Redis, sqlite3, Pandas, Pytorch, discordpy, Ray Serve, asyncio, aiohttp
 - [x] Add cache for .rec complete if nothing has changed since previous
 - [x] Add structured logging?
 - [x] Figure out slash commands
+- [ ] Fix pagination bug where it skips pages
+- [ ] Make recommender ignore dropped, on hold shows
+- [ ] Update model
